@@ -105,17 +105,7 @@ register_activation_hook( __FILE__, function() {
             });
 
             $("#woocommerce_paypal_marketing_solutions_ppms_enabled").change(function () {
-                if ($( this ).is( ':checked' )) {
-                    MUSEButton('paypal-muse-button-container', {
-                        cid: getContainerId(),
-                        onContainerCreate: setContainerId,
-                        partner_name: 'woocommerce',
-                        env: $('#woocommerce_paypal_marketing_solutions_ppms_environment').val()
-                      });
-                } else {
-                    $("#paypal-muse-button-container").empty();
-                    $(".woocommerce-save-button").prop("disabled", false);
-                }
+                toggleButton(this);
             });
 
             function getContainerId() {
@@ -129,7 +119,22 @@ register_activation_hook( __FILE__, function() {
                 $('#woocommerce_paypal_marketing_solutions_ppms_cid_sandbox').val(id) : 
                 $('#woocommerce_paypal_marketing_solutions_ppms_cid_production').val(id)
             }
-            
+
+            function toggleButton(ele) {
+                if ($( ele ).is( ':checked' )) {
+                    MUSEButton('paypal-muse-button-container', {
+                        cid: getContainerId(),
+                        onContainerCreate: setContainerId,
+                        partner_name: 'woocommerce',
+                        env: $('#woocommerce_paypal_marketing_solutions_ppms_environment').val()
+                      });
+                } else {
+                    $("#paypal-muse-button-container").empty();
+                    $(".woocommerce-save-button").prop("disabled", false);
+                }
+            }
+
+            toggleButton($("#woocommerce_paypal_marketing_solutions_ppms_enabled"));            
           });
         </script>
         <?php
@@ -157,6 +162,12 @@ register_activation_hook( __FILE__, function() {
         update_option('ppms_cid_sandbox', $_POST['woocommerce_paypal_marketing_solutions_ppms_cid_sandbox']);
         update_option('ppms_cid_production', $_POST['woocommerce_paypal_marketing_solutions_ppms_cid_production']);
         update_option('ppms_enabled', $_POST['woocommerce_paypal_marketing_solutions_ppms_enabled']);
+        /*
+        update_option('ppms_environment', '');
+        update_option('ppms_cid_sandbox', '');
+        update_option('ppms_cid_production', '');
+        update_option('ppms_enabled', '');
+        */
       }
 
       public function init_form_fields() {
@@ -218,7 +229,7 @@ register_activation_hook( __FILE__, function() {
     // wp_enqueue_script: https://developer.wordpress.org/reference/functions/wp_enqueue_script/
     if (get_option("ppms_enabled") == "1") {
         wp_enqueue_script('paypal-merchant-offers-js', plugin_dir_url( __FILE__ ) . 'assets/js/wc-gateway-ppec-frontend-offers.js');
-        wp_add_inline_script('paypal-merchant-offers-js', ";(function(a,t,o,m,s){a[m]=a[m]||[];a[m].push({t:new Date().getTime(),event:'snippetRun'});var f=t.getElementsByTagName(o)[0],e=t.createElement(o),d=m!=='paypalDDL'?'&m='+m:'';e.async=!0;e.src='https://www.paypal.com/tagmanager/pptm.js?id='+s+d;f.parentNode.insertBefore(e,f);})(window,document,'script','paypalDDL','".( get_option("ppms_environment") === "production" ? get_option("ppms_cid_production")  : get_option("ppms_cid_sandbox"))."');");
+        wp_add_inline_script('paypal-merchant-offers-js', ";(function(a,t,o,m,s){a[m]=a[m]||[];a[m].push({t:new Date().getTime(),event:'snippetRun'});var f=t.getElementsByTagName(o)[0],e=t.createElement(o),d=m!=='paypalDDL'?'&m='+m:'';e.async=!0;e.src='https://www." . ((get_option("ppms_environment") === "sandbox") ? "sandbox." : "" ) . "paypal.com/tagmanager/pptm.js?id='+s+d;f.parentNode.insertBefore(e,f);})(window,document,'script','paypalDDL','".( get_option("ppms_environment") === "production" ? get_option("ppms_cid_production")  : get_option("ppms_cid_sandbox"))."');");
     }
   
   });
